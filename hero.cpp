@@ -14,9 +14,14 @@ Hero::~Hero(){
 
 //jump
 void Hero::Jump(){
+  if(!LandedYet){
+    startTime = GetTime();
+    LandedYet = true;
+  }
   float gravity = -0.5f;
   float velocity = 2.0f;
-  float time = GetTime();
+  float currentTime = GetTime();
+  float time = startTime - currentTime;
 
   pos_y -= gravity*time*time+velocity*time;
   
@@ -42,5 +47,9 @@ void Hero::Draw(){
 }
 
 void Hero::Update(){
-
+  if(pos_y >450.0f && IsJumping== true){
+    IsJumping = false;
+    pos_y = 450.0f;
+    LandedYet = false;
+  }
 }

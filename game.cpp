@@ -26,7 +26,12 @@ void Game::Draw(){
 }
 
 void Game::Update(){
-
+  //up hero
+  hero.Update();
+  //set jump
+  if(hero.GetIsJumping()){
+    hero.Jump();
+  }
 }
 
 void Game::HandleInput(){
@@ -38,6 +43,8 @@ void Game::HandleInput(){
     hero.Move(4);//west
   }
   if(IsKeyDown(KEY_SPACE)){
-    hero.Jump();
+    if(hero.GetIsJumping() == false){
+      hero.SetJumpTrue();
+    }
   }
 }
