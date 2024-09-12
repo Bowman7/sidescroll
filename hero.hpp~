@@ -1,0 +1,14 @@
+#include"raylib.h"
+
+
+class Hero{
+public:
+  Hero();
+  ~Hero();
+
+  void Draw();
+  void Update();
+  
+private:
+  
+};

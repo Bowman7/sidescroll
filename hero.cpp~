@@ -1,0 +1,19 @@
+#include"hero.hpp"
+
+
+Hero::Hero(){
+  pos_x = 10;
+  pos_y = 500;
+}
+
+Hero::~Hero(){
+
+}
+
+void Hero::Draw(){
+
+}
+
+void Hero::Update(){
+
+}
