@@ -7,7 +7,7 @@ Game::Game(int width,int height){
 }
 
 Game::Game(){
-
+  
 }
 
 Game::~Game(){

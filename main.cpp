@@ -12,9 +12,17 @@ int main(){
 
   SetTargetFPS(60);
 
+  float prevTime = 0.0f;
+  float currentTime = GetTime();
   //setup game object
   Game game(WIDTH,HEIGHT);
   while(!WindowShouldClose()){
+    //delat time
+    prevTime = currentTime;
+    currentTime = GetTime();
+    float dt = currentTime - prevTime;
+
+    printf("dt in main: %f\n",dt);
     //handle input
     game.HandleInput();
     //update

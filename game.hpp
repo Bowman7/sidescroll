@@ -7,6 +7,7 @@ public:
   Game();
   Game(int,int);
   ~Game();
+  void GameMain();
   void Draw();
   void Update();
   void HandleInput();
@@ -18,4 +19,5 @@ private:
   int Width;
   int Height;
   int p_height = 500;
+
 };
