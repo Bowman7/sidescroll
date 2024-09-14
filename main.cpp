@@ -1,9 +1,11 @@
 #include"raylib.h"
 
-#define HEIGHT 720
-#define WIDTH 1080
+#define HEIGHT 1000
+#define WIDTH  1000
 
 #include"game.hpp"
+#include"core.hpp"
+#include<string>
 
 int main(){
   
@@ -16,24 +18,26 @@ int main(){
   float currentTime = GetTime();
   //setup game object
   Game game(WIDTH,HEIGHT);
+
+  //core game
+  Core core;
   while(!WindowShouldClose()){
     //delat time
     prevTime = currentTime;
     currentTime = GetTime();
     float dt = currentTime - prevTime;
 
-    printf("dt in main: %f\n",dt);
     //handle input
-    game.HandleInput();
+    core.HandleInput();
     //update
-    game.Update();
+    core.Update(dt);
 
     //draw
     BeginDrawing();
     ClearBackground(WHITE);
 
-    game.Draw();
-    DrawText("yeay",200,200,20,BLACK);
+    core.Draw();
+    //DrawText("yeay",200,200,20,BLACK);
 
     EndDrawing();
   }

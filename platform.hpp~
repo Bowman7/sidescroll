@@ -1,0 +1,14 @@
+#include"raylib.h"
+
+class Platform{
+public:
+  Platform(){}
+  ~Platform(){}
+  void Draw();
+
+private:
+  int posX;
+  int posY;
+  int width;
+  int height;
+};

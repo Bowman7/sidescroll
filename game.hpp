@@ -1,6 +1,9 @@
 #include"raylib.h"
 
+#include<stdio.h>
+
 #include"hero.hpp"
+#include"platform.hpp"
 
 class Game{
 public:
@@ -9,12 +12,19 @@ public:
   ~Game();
   void GameMain();
   void Draw();
-  void Update();
+  void Update(float);
   void HandleInput();
 
-  void DrawPlatform();
+  void DrawGround();
+  void InitPlatformPos();
+
+  //collision
+  void CheckCollision();
 private:
   Hero hero;
+  Platform platform;
+
+  
   
   int Width;
   int Height;
