@@ -13,5 +13,8 @@ public:
   void InitGrid();
 private:
   std::string grid;
-  int width=40;
+  int gridWidth = 20;
+  int gridHeight = 20;
+
+  int boxWidth=40;
 };
