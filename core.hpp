@@ -3,11 +3,11 @@
 #include<string>
 class Core{
 public:
-  Core();
+  Core(Camera2D&);
   ~Core();
 
-  void HandleInput();
-  void Update(float);
+  void HandleInput(float);
+  void Update(float,Camera2D&);
   void Draw();
 
   void InitGrid();
@@ -28,5 +28,8 @@ private:
   int nVisibleTileX;
   int nVisibleTileY;
   int boxWidth=40;
+
+  //falg
+  bool bPlayerOnGround = false;
   
 };

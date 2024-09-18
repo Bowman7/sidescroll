@@ -18,9 +18,13 @@ int main(){
   float currentTime = GetTime();
   //setup game object
   Game game(WIDTH,HEIGHT);
-
+  
   //core game
-  Core core;
+  //setup camera
+  Camera2D camera ={0};
+  Core core(camera);
+  
+  
   while(!WindowShouldClose()){
     //delat time
     prevTime = currentTime;
@@ -28,17 +32,19 @@ int main(){
     float dt = currentTime - prevTime;
 
     //handle input
-    core.HandleInput();
+    core.HandleInput(dt);
     //update
-    core.Update(dt);
+    core.Update(dt,camera);
 
     //draw
     BeginDrawing();
     ClearBackground(WHITE);
+    BeginMode2D(camera);
 
     core.Draw();
     //DrawText("yeay",200,200,20,BLACK);
 
+    EndMode2D();
     EndDrawing();
   }
 
