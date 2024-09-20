@@ -3,14 +3,13 @@
 Core::Core(Camera2D &camera){
   //gridsetup
   InitGrid();
-  nVisibleTileX = 800/gridWidth;
-  nVisibleTileY = 800/gridHeight;
+  
   //init camera
   //camera at center
   camera.target = (Vector2){fPlayerPos.x+20.0f,fPlayerPos.y+20.0f};
-  camera.offset = (Vector2){800/2.0f,800/2.0f};
+  camera.offset = (Vector2){400.0f,400.0f};
   camera.rotation = 0.0f;
-  camera.zoom = 1.0f;
+  camera.zoom = 2.0f;
 }
 
 Core::~Core(){
@@ -194,20 +193,31 @@ void Core::Update(float dt,Camera2D& camera){
   fPlayerPos.x = fNewPlayerPos.x;
   fPlayerPos.y = fNewPlayerPos.y;
 
-  //update camera offset
-  float offsetX = camera.target.x - (float)nVisibleTileX/2.0f;
-  float offsetY = camera.target.y - (float)nVisibleTileY/2.0f;
+  //update camera pos
+  float minX = 0.0f;
+  float minY = 0.0f;
+  float maxX = gridWidth*boxWidth;
+  float maxY = gridHeight*boxWidth;
 
-  if(offsetX<0.0f){
-    offsetX = 0.0f;
-  }
-  if(offsetY<0.0f){
-    offsetY = 0.0f;
-  }
-  //if(offsetX > )
-  //camera.offset.x = 
-  
+  camera.target.x = Clamp(fPlayerPos.x+boxWidth/2,
+			  minX+camera.offset.x/camera.zoom,
+			  maxX - camera.offset.x/camera.zoom
+			  );
+  camera.target.y = Clamp(fPlayerPos.y+boxWidth/2,
+			  minY + camera.offset.y/camera.zoom,
+			  maxY - camera.offset.y/camera.zoom
+			  );
 }
+//clamp func
+float Core::Clamp(float value, float min,float max){
+  if(value<min){
+    return min;
+  }
+  if(value >max ){
+    return max;
+  }
+  return value;
+} 
 //get tile
 char Core::GetTile(int x,int y){
   if(x>=0 && x<gridWidth && y>=0 && y <gridHeight){
@@ -217,7 +227,7 @@ char Core::GetTile(int x,int y){
   }
   
 }
-void Core::Draw(){
+void Core::Draw(Camera2D& camera){
   //print grids
   for(int y=0;y<gridHeight;y++){
     //printf("%d val: %c \n",y,grid[y*20+0]);
@@ -241,6 +251,13 @@ void Core::Draw(){
     DrawLine(0,i*boxWidth,800,i*boxWidth,BLACK);
   }
   */
+  //draw offsetline x
+  DrawLine(0,(int)camera.offset.y+camera.target.y,
+	   (int)camera.offset.x+camera.target.x,
+	   (int)camera.offset.y+camera.target.y,BLACK);
+  DrawLine((int)camera.offset.x+camera.target.x,0,
+	   (int)camera.offset.x+camera.target.x,
+	   (int)camera.offset.y+camera.target.y,BLACK);
 
   
 }

@@ -8,13 +8,14 @@ public:
 
   void HandleInput(float);
   void Update(float,Camera2D&);
-  void Draw();
+  void Draw(Camera2D&);
 
   void InitGrid();
   char GetTile(int,int);
+  float Clamp(float value, float min,float max);
 private:
   //player
-  Vector2 fPlayerPos={0.0f,0.0f};
+  Vector2 fPlayerPos={200.0f,200.0f};
 
   Vector2 fNewPlayerPos ={0.0f,0.0f};
 
@@ -27,6 +28,7 @@ private:
 
   int nVisibleTileX;
   int nVisibleTileY;
+  
   int boxWidth=40;
 
   //falg

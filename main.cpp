@@ -1,7 +1,7 @@
 #include"raylib.h"
 
-#define HEIGHT 1000
-#define WIDTH  1000
+#define HEIGHT 800
+#define WIDTH  800
 
 #include"game.hpp"
 #include"core.hpp"
@@ -41,7 +41,7 @@ int main(){
     ClearBackground(WHITE);
     BeginMode2D(camera);
 
-    core.Draw();
+    core.Draw(camera);
     //DrawText("yeay",200,200,20,BLACK);
 
     EndMode2D();
