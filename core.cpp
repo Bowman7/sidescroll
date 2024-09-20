@@ -18,27 +18,40 @@ Core::~Core(){
 
 
 void Core::InitGrid(){
-  
+  /*
   grid +="....................";
+  grid +="......#.#...........";
+  grid +=".....##.############";
+  grid +="######..############";
+  grid +="#####...############";
+  grid +="#####...############";
+  grid +="#####...############";
+  grid +="#.......############";
+  grid +="#....###############";
+  grid +="#...################";
+  grid +="#..#################";
   grid +="....................";
-  grid +="....#.##########..#.";
-  grid +="....#.#...........#.";
-  grid +="....#.#........###..";
-  grid +="....#.#.......#.....";
-  grid +="#####.#......#......";
-  grid +="#.....#....##.......";
-  grid +="#.####...##.........";
-  grid +="#.#.....#...........";
-  grid +="#.#....#............";
-  grid +="....................";
-  grid +="##.##############.##";
-  grid +=".#.#.......#......#.";
-  grid +=".#.#......#...####..";
-  grid +=".#.#....##...#......";
-  grid +=".#.#####...##.......";
-  grid +=".#........#.........";
-  grid +=".#########..........";
-  grid +="....................";
+  grid +="#...############..##";
+  grid +="##.#########.......#";
+  grid +="##.########.....####";
+  grid +="##.########...######";
+  grid +="##.########..#######";
+  grid +="##...............###";
+  grid +="####################";
+  grid +="####################";
+  */
+  //read file
+  std::ifstream file("level_0.txt");
+  if(!file){
+    printf("could not open file\n");
+  }
+  //read tille nd
+  std::string line;
+  while(getline(file,line)){
+    grid += line;
+  }
+
+  file.close();
  
   printf("size of string: %ld\n",grid.size());
   for(int i=0;i<grid.size();i++){
@@ -146,8 +159,8 @@ void Core::Update(float dt,Camera2D& camera){
        GetTile(x+1.0f,y+0.9f) !='.'
        )
       {
-	printf("right collision\n");
-	printf("current xpos: %f\n",fNewPlayerPos.x);
+	//printf("right collision\n");
+	//printf("current xpos: %f\n",fNewPlayerPos.x);
 	float New_x = fNewPlayerPos.x/40;
 	int New_grid_x = (int)New_x;
 
@@ -196,17 +209,28 @@ void Core::Update(float dt,Camera2D& camera){
   //update camera pos
   float minX = 0.0f;
   float minY = 0.0f;
-  float maxX = gridWidth*boxWidth;
-  float maxY = gridHeight*boxWidth;
+  float maxX = gridWidth*boxWidth -(camera.offset.x/camera.zoom);
+  float maxY = gridHeight*boxWidth -(camera.offset.y/camera.zoom);
+
+  printf("max current x: %f \n",maxX);
+  printf("max current y: %f \n",maxY);
 
   camera.target.x = Clamp(fPlayerPos.x+boxWidth/2,
 			  minX+camera.offset.x/camera.zoom,
-			  maxX - camera.offset.x/camera.zoom
+			  maxX
 			  );
   camera.target.y = Clamp(fPlayerPos.y+boxWidth/2,
 			  minY + camera.offset.y/camera.zoom,
-			  maxY - camera.offset.y/camera.zoom
+			  maxY
 			  );
+
+  if(fPlayerPos.x > 440.0f){
+    camera.target.x = 460.0f;
+  }
+
+  printf("camera target x y: %f %f\n",
+	 camera.target.x,camera.target.y);
+
 }
 //clamp func
 float Core::Clamp(float value, float min,float max){

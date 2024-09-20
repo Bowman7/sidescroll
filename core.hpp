@@ -1,6 +1,8 @@
 #include"raylib.h"
 
 #include<string>
+#include<fstream>
+
 class Core{
 public:
   Core(Camera2D&);
@@ -15,7 +17,7 @@ public:
   float Clamp(float value, float min,float max);
 private:
   //player
-  Vector2 fPlayerPos={200.0f,200.0f};
+  Vector2 fPlayerPos={0.0f,0.0f};
 
   Vector2 fNewPlayerPos ={0.0f,0.0f};
 
