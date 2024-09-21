@@ -25,13 +25,19 @@ private:
   float fPlayerVelY=0.0f;
   
   std::string grid;
+  
   int gridWidth = 20;
   int gridHeight = 20;
+  int boxWidth=40;
+  //new
+  int NewGridWidth = 67;
+  int NewGridHeight = 45;
+  int NewBoxDim = 16;
 
   int nVisibleTileX;
   int nVisibleTileY;
   
-  int boxWidth=40;
+  
 
   //falg
   bool bPlayerOnGround = false;
