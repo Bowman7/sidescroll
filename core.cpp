@@ -3,20 +3,60 @@
 Core::Core(Camera2D &camera){
   //gridsetup
   InitGrid();
-  
+
+  //init health
+  health = 3;
   //init camera
   //camera at center
   camera.target = (Vector2){fPlayerPos.x+20.0f,fPlayerPos.y+20.0f};
   camera.offset = (Vector2){1080.0f/2.0f,720.0f/2.0f};
   camera.rotation = 0.0f;
   camera.zoom = 2.0f;
+
+  //init enemy
+  for(int i=0;i<8;i++){
+    enemy[i].posX = 0;
+    enemy[i].posY = 0;
+    enemy[i].color = ORANGE;
+    enemy[i].nDim = 16;
+    enemy[i].alive = true;
+  }
+  //setup enemy pos
+  SetupEnemyPos();
 }
 
 Core::~Core(){
 
 }
 
-
+//setup enemy por
+void Core::SetupEnemyPos(){
+  //for enemy1
+  enemy[0].posX = 15;
+  enemy[0].posY = 42;
+  //for enemy 2
+  enemy[1].posX = 17;
+  enemy[1].posY = 32;
+  //for enemy 3
+  enemy[2].posX = 20;
+  enemy[2].posY = 32;
+  //for enemy 4
+  enemy[3].posX = 17;
+  enemy[3].posY = 10;
+  //for enemy 5
+  enemy[4].posX = 51;
+  enemy[4].posY = 10;
+  //for enemy 6
+  enemy[5].posX = 48;
+  enemy[5].posY = 21;
+  //for enemy 7
+  enemy[6].posX = 44;
+  enemy[6].posY = 41;
+  //for enemy 8
+  enemy[7].posX = 49;
+  enemy[7].posY = 41;
+  
+}
 void Core::InitGrid(){
   /*
   grid +="....................";
@@ -103,7 +143,7 @@ void Core::HandleInput(float dt){
   }
 }  
 
-void Core::Update(float dt,Camera2D& camera){
+void Core::UpdatePlayerPos(float dt){
   //gravity
   fPlayerVelY += 50.0f*dt*5;
   //resistance
@@ -130,7 +170,11 @@ void Core::Update(float dt,Camera2D& camera){
   if(fPlayerVelY < -100.0f){
     fPlayerVelY = -100.0f;
   }
+}
+//core collision check
 
+void Core::CoreCollision(){
+  
   bPlayerOnGround = false;
   
   //check collision
@@ -205,15 +249,20 @@ void Core::Update(float dt,Camera2D& camera){
   //update player pos
   fPlayerPos.x = fNewPlayerPos.x;
   fPlayerPos.y = fNewPlayerPos.y;
-
+}
+//update camera
+void Core::UpdateCamera(Camera2D& camera){
+   //camera.target = fPlayerPos;
+  //printf("camera target x y: %f %f\n",camera.target.x,camera.target.y);
+  
   //update camera pos
   float minX = 0.0f;
   float minY = 0.0f;
   float maxX = NewGridWidth*NewBoxDim -(camera.offset.x/camera.zoom);
   float maxY = NewGridHeight*NewBoxDim -(camera.offset.y/camera.zoom);
 
-  printf("max current x: %f \n",maxX);
-  printf("max current y: %f \n",maxY);
+  //printf("max current x: %f \n",maxX);
+  //printf("max current y: %f \n",maxY);
 
   camera.target.x = Clamp(fPlayerPos.x+NewBoxDim/2,
 			  minX+camera.offset.x/camera.zoom,
@@ -228,9 +277,49 @@ void Core::Update(float dt,Camera2D& camera){
     camera.target.y = 524.0f;
   }
 
-  printf("camera target x y: %f %f\n",
-	 camera.target.x,camera.target.y);
+  //printf("camera target x y: %f %f\n",camera.target.x,camera.target.y);
+}
+//update player health
+void Core::UpdateHealth(){
+  //check for fall damage
+  int x = (int)fPlayerPos.x/NewBoxDim;
+  int y = (int)fPlayerPos.y/NewBoxDim;
+  char tileBelow = GetTile(x,y+1);
+  //printf("player on top of tile: %c\n",tileBelow);
+  if(tileBelow == '#'){
+    int prevHeight =HeightCount;
+    if(prevHeight>0){
+      //printf("height fallen: %d\n",prevHeight);
+    }
+    if(prevHeight>70){
+      health--;
+      printf("Current Health: %d\n",health);
+    }
+    HeightCount = 0;
+  }else if(tileBelow =='.'){
+    HeightCount++;
+  }
+}
+void Core::Update(float dt,Camera2D& camera){
+  
+  UpdatePlayerPos(dt);
 
+  CoreCollision();
+
+  UpdateCamera(camera);
+
+  UpdateHealth();
+
+  //check collision for each enemy
+  int x = (int)fPlayerPos.x/NewBoxDim;
+  int y = (int)fPlayerPos.y/NewBoxDim;
+  if(x+1 == enemy[0].posX && y == enemy[0].posY ||
+     x == enemy[0].posX && y == enemy[0].posY){
+    printf("collision\n");
+  }
+  printf(" x: %d posX :%d \n",x,enemy[0].posX);
+  
+   	
 }
 //clamp func
 float Core::Clamp(float value, float min,float max){
@@ -266,6 +355,14 @@ void Core::Draw(Camera2D& camera){
     }
   } 
 
+
+  //draw enemies
+  for(int i=0;i<8;i++){
+    if(enemy[i].alive){
+      DrawRectangle(enemy[i].posX*enemy[i].nDim,enemy[i].posY*enemy[i].nDim,
+		    enemy[i].nDim,enemy[i].nDim,enemy[i].color);
+    }
+  }
   //draw player
   DrawRectangle(fPlayerPos.x,fPlayerPos.y,NewBoxDim,NewBoxDim,GREEN);
   //draw lines
@@ -278,14 +375,6 @@ void Core::Draw(Camera2D& camera){
      //horz lines
     DrawLine(0,j*16,1080,j*16,BLACK);
   }
-  
-  //draw offsetline x
-  DrawLine(0,(int)camera.offset.y+camera.target.y,
-	   (int)camera.offset.x+camera.target.x,
-	   (int)camera.offset.y+camera.target.y,BLACK);
-  DrawLine((int)camera.offset.x+camera.target.x,0,
-	   (int)camera.offset.x+camera.target.x,
-	   (int)camera.offset.y+camera.target.y,BLACK);
 
   
 }

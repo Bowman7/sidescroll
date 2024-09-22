@@ -3,6 +3,15 @@
 #include<string>
 #include<fstream>
 
+
+struct Enemy{
+  int posX;
+  int posY;
+  Color color;
+  int nDim;
+  bool alive;
+};
+
 class Core{
 public:
   Core(Camera2D&);
@@ -15,8 +24,19 @@ public:
   void InitGrid();
   char GetTile(int,int);
   float Clamp(float value, float min,float max);
+  void SetupEnemyPos();
+  void UpdatePlayerPos(float);
+  void CoreCollision();
+  void UpdateCamera(Camera2D&);
+  void UpdateHealth();
 private:
+  //enemy
+  Enemy enemy[8];
   //player
+  int health;
+  bool OnLand=true;
+  int HeightCount =0;
+  
   Vector2 fPlayerPos={0.0f,0.0f};
 
   Vector2 fNewPlayerPos ={0.0f,0.0f};
