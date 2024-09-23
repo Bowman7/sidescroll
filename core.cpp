@@ -15,14 +15,19 @@ Core::Core(Camera2D &camera){
 
   //init enemy
   for(int i=0;i<8;i++){
-    enemy[i].posX = 0;
-    enemy[i].posY = 0;
+    enemy[i].posX = 0.0f;
+    enemy[i].posY = 0.0f;
     enemy[i].color = ORANGE;
     enemy[i].nDim = 16;
     enemy[i].alive = true;
   }
   //setup enemy pos
   SetupEnemyPos();
+  //load texture
+  Ibackground = LoadImage("assets/background.png");
+  Tbackground = LoadTextureFromImage(Ibackground);
+  UnloadImage(Ibackground);
+  
 }
 
 Core::~Core(){
@@ -300,26 +305,119 @@ void Core::UpdateHealth(){
     HeightCount++;
   }
 }
-void Core::Update(float dt,Camera2D& camera){
+//update enemy pos and stuff
+void Core::UpdateEnemy(){
   
+  for(int i=0;i<8;i++){
+    //check collision for each enemy
+    if(enemy[i].alive){
+      //aabb for x dir
+      float e_x = enemy[i].posX*NewBoxDim;
+      float e_y = enemy[i].posY*NewBoxDim;
+      
+      if(fPlayerPos.x+NewBoxDim > e_x &&
+	 fPlayerPos.x < e_x+NewBoxDim &&
+	 fPlayerPos.y+NewBoxDim >e_y &&
+	 fPlayerPos.y < e_y+NewBoxDim
+	 ){
+	//check for top damage
+	if(fPlayerPos.y+NewBoxDim <= e_y+NewBoxDim/2){
+	  printf("enemy dead\n");
+	  enemy[i].alive = false;
+	  fPlayerVelY *= -2;
+	}else{
+	  fPlayerVelX *= -30;
+	  health--;
+	  printf("collision\n");
+	  printf("Current health: %d\n",health);
+	}
+      }
+    }
+  }
+  //printf(" x: %d posX :%d \n",x,enemy[0].posX);
+  //move enemy
+  //1
+  if(IsTimeElapsed(0.1f)){
+    if(!setDir){
+      for(int i=0;i<8;i++){
+	enemy[i].posX -=0.25;
+      }
+      count++;
+    }
+    else if(setDir){
+      for(int i=0;i<8;i++){
+	enemy[i].posX +=0.25;
+      }
+      count++;
+    }
+    if(count == 20){
+      if(!setDir){
+	setDir = true;
+      }else{
+	setDir = false;
+      }
+      count =0;
+    }
+  }
+}
+//initialize game again
+void Core::GameInit(){
+  //gridsetup
+  InitGrid();
+
+  //init health
+  health = 3;
+  //init camera/*
+  //camera at center
+  /*
+  camera.target = (Vector2){fPlayerPos.x+20.0f,fPlayerPos.y+20.0f};
+  camera.offset = (Vector2){1080.0f/2.0f,720.0f/2.0f};
+  camera.rotation = 0.0f;
+  camera.zoom = 2.0f;
+  */
+  //init enemy
+  for(int i=0;i<8;i++){
+    enemy[i].posX = 0.0f;
+    enemy[i].posY = 0.0f;
+    enemy[i].color = ORANGE;
+    enemy[i].nDim = 16;
+    enemy[i].alive = true;
+  }
+  //setup enemy pos
+  SetupEnemyPos();
+
+  fPlayerPos={0.0f,0.0f};
+  fNewPlayerPos ={0.0f,0.0f};
+
+  fPlayerVelX=0.0f;
+  fPlayerVelY=0.0f;
+  
+}
+void Core::Update(float dt,Camera2D& camera){
+
+  //check if helath 0
+  if(health < 0){
+    GameInit();
+  }
   UpdatePlayerPos(dt);
 
   CoreCollision();
 
   UpdateCamera(camera);
 
-  UpdateHealth();
-
-  //check collision for each enemy
-  int x = (int)fPlayerPos.x/NewBoxDim;
-  int y = (int)fPlayerPos.y/NewBoxDim;
-  if(x+1 == enemy[0].posX && y == enemy[0].posY ||
-     x == enemy[0].posX && y == enemy[0].posY){
-    printf("collision\n");
-  }
-  printf(" x: %d posX :%d \n",x,enemy[0].posX);
+  //UpdateHealth();
+  UpdateEnemy();
   
    	
+}
+//check if time elapsed
+bool Core::IsTimeElapsed(float time){
+  float currentTime = GetTime();
+  if(currentTime - lastElapsedTime >= time){
+    lastElapsedTime = currentTime;
+    return true;
+  }
+  return false;
 }
 //clamp func
 float Core::Clamp(float value, float min,float max){
@@ -341,13 +439,15 @@ char Core::GetTile(int x,int y){
   
 }
 void Core::Draw(Camera2D& camera){
+  //draw background
+  DrawTexture(Tbackground,0,0,WHITE);
   //print grids
   for(int y=0;y<=NewGridHeight;y++){
     //printf("%d val: %c \n",y,grid[y*20+0]);
     for(int x=0;x<=NewGridWidth;x++){
       if(grid[y*NewGridWidth+x]=='.'){
-	DrawRectangle(x*NewBoxDim,y*NewBoxDim,
-		      NewBoxDim,NewBoxDim,BLUE);
+	//DrawRectangle(x*NewBoxDim,y*NewBoxDim,
+	//      NewBoxDim,NewBoxDim,BLUE);
       }else if(grid[y*NewGridWidth+x]=='#'){
 	DrawRectangle(x*NewBoxDim,y*NewBoxDim,
 		      NewBoxDim,NewBoxDim,RED);
@@ -369,11 +469,11 @@ void Core::Draw(Camera2D& camera){
   
   for(int i=0;i<67;i++){
     //vert line
-    DrawLine(i*16,0,i*16,720,BLACK);
+    //DrawLine(i*16,0,i*16,720,BLACK);
   }
   for(int j=0;j<45;j++){
      //horz lines
-    DrawLine(0,j*16,1080,j*16,BLACK);
+    //DrawLine(0,j*16,1080,j*16,BLACK);
   }
 
   

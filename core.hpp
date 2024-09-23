@@ -5,8 +5,8 @@
 
 
 struct Enemy{
-  int posX;
-  int posY;
+  float posX;
+  float posY;
   Color color;
   int nDim;
   bool alive;
@@ -29,7 +29,16 @@ public:
   void CoreCollision();
   void UpdateCamera(Camera2D&);
   void UpdateHealth();
+  bool IsTimeElapsed(float);
+  void UpdateEnemy();
+  void GameInit();
 private:
+  //texture stuff
+  Image Ibackground;
+  Texture2D Tbackground;
+  float lastElapsedTime = GetTime();
+  int count =0;
+  bool setDir = false;//-ve
   //enemy
   Enemy enemy[8];
   //player
