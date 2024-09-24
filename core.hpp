@@ -33,6 +33,10 @@ public:
   void UpdateEnemy();
   void GameInit();
 private:
+  //tile stuff
+  Image tile_image;
+  Texture2D tile_texture;
+  Rectangle tileFrameRec;
   //texture stuff
   Image Ibackground;
   Texture2D Tbackground;

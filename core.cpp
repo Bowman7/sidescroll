@@ -27,6 +27,11 @@ Core::Core(Camera2D &camera){
   Ibackground = LoadImage("assets/background.png");
   Tbackground = LoadTextureFromImage(Ibackground);
   UnloadImage(Ibackground);
+  //load tile
+  tile_image = LoadImage("assets/groundtile.png");
+  tile_texture = LoadTextureFromImage(tile_image);
+  UnloadImage(tile_image);
+  tileFrameRec = {0.0f,0.0f,(float)tile_texture.width/11,(float)tile_texture.height}; 
   
 }
 
@@ -449,8 +454,15 @@ void Core::Draw(Camera2D& camera){
 	//DrawRectangle(x*NewBoxDim,y*NewBoxDim,
 	//      NewBoxDim,NewBoxDim,BLUE);
       }else if(grid[y*NewGridWidth+x]=='#'){
-	DrawRectangle(x*NewBoxDim,y*NewBoxDim,
-		      NewBoxDim,NewBoxDim,RED);
+	bool rightDot= (x+1<NewGridWidth) && (grid[y*NewGridWidth+x+1] == '.');
+	bool topDot = (y-1 >= 0) && (grid[(y-1)*NewGridWidth+x]=='.');
+
+	if(rightDot && topDot){
+	  tileFrameRec.x = 1.0f *(float)tile_texture.width / 11;
+	}else{
+	  tileFrameRec.x = 0.0f *(float)tile_texture.width / 11;
+	}
+	DrawTextureRec(tile_texture,tileFrameRec,{(float)x*NewBoxDim,(float)y*NewBoxDim},WHITE);
       }
     }
   } 
