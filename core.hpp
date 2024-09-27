@@ -4,6 +4,10 @@
 #include<fstream>
 
 
+enum h_Direction{
+  east = 0,
+  west
+};
 struct Enemy{
   float posX;
   float posY;
@@ -33,7 +37,17 @@ public:
   void UpdateEnemy();
   void GameInit();
 private:
+  //direction
+  h_Direction h_direction;
+  //hero tile
+  Image hero_image;
+  Texture2D hero_texture;
+  Rectangle heroFrameRec;
+  int heroCurrentFrame;
+  int heroFrameCounter ;
+  int heroFrameSpeed ;
   //tile stuff
+  std::string MainGrid;
   Image tile_image;
   Texture2D tile_texture;
   Rectangle tileFrameRec;

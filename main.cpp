@@ -1,7 +1,7 @@
 #include"raylib.h"
 
 #define HEIGHT 720
-#define WIDTH  1080
+#define WIDTH  1072
 
 #include"game.hpp"
 #include"core.hpp"

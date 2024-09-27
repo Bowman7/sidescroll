@@ -3,7 +3,7 @@
 Core::Core(Camera2D &camera){
   //gridsetup
   InitGrid();
-
+  
   //init health
   health = 3;
   //init camera
@@ -31,7 +31,16 @@ Core::Core(Camera2D &camera){
   tile_image = LoadImage("assets/groundtile.png");
   tile_texture = LoadTextureFromImage(tile_image);
   UnloadImage(tile_image);
-  tileFrameRec = {0.0f,0.0f,(float)tile_texture.width/11,(float)tile_texture.height}; 
+  tileFrameRec = {0.0f,0.0f,(float)tile_texture.width/14,(float)tile_texture.height};
+  //hero texture stuff
+  hero_image = LoadImage("assets/hero.png");
+  hero_texture = LoadTextureFromImage(hero_image);
+  UnloadImage(hero_image);
+  heroFrameRec = {0.0f,0.0f,(float)hero_texture.width/5,(float)hero_texture.height/2};
+  heroCurrentFrame = 0;
+  heroFrameCounter = 0;
+  heroFrameSpeed = 5;
+  
   
 }
 
@@ -68,28 +77,7 @@ void Core::SetupEnemyPos(){
   
 }
 void Core::InitGrid(){
-  /*
-  grid +="....................";
-  grid +="......#.#...........";
-  grid +=".....##.############";
-  grid +="######..############";
-  grid +="#####...############";
-  grid +="#####...############";
-  grid +="#####...############";
-  grid +="#.......############";
-  grid +="#....###############";
-  grid +="#...################";
-  grid +="#..#################";
-  grid +="....................";
-  grid +="#...############..##";
-  grid +="##.#########.......#";
-  grid +="##.########.....####";
-  grid +="##.########...######";
-  grid +="##.########..#######";
-  grid +="##...............###";
-  grid +="####################";
-  grid +="####################";
-  */
+
   //read file
   std::ifstream file("level_0.txt");
   if(!file){
@@ -103,14 +91,50 @@ void Core::InitGrid(){
 
   file.close();
  
-  printf("size of string: %ld\n",grid.size());
-  for(int i=0;i<grid.size();i++){
-    if(grid[i] == '\n'){
-      printf("\n");
-    }else{
-      printf(" %c ",grid[i]);
+  //setup main grid
+   for(int y=0;y<NewGridHeight;y++){
+    for(int x=0;x<NewGridWidth;x++){
+      if(grid[y*NewGridWidth+x]=='.'){
+	//do nothing
+      }else if(grid[y*NewGridWidth+x]=='#'){
+	bool rightDot= (x+1<NewGridWidth) && (grid[y*NewGridWidth+x+1] == '.');
+	bool topDot = (y-1 >= 0) && (grid[(y-1)*NewGridWidth+x]=='.');
+	bool leftDot = (x-1>=0) && (grid[y*NewGridWidth+x-1] == '.');
+	bool bottomDot = (y+1 <NewGridHeight) && (grid[(y+1)*NewGridWidth+x] == '.');
+	if(rightDot && topDot && !bottomDot && !leftDot){
+	  grid[y*NewGridWidth+x] = '2';
+	}else if(topDot && bottomDot && rightDot && !leftDot){
+	  grid[y*NewGridWidth+x] = '3';
+	}else if(topDot && bottomDot && leftDot && !rightDot){
+	  grid[y*NewGridWidth+x] = '4';
+	}else if(topDot && bottomDot && leftDot && rightDot){
+	  grid[y*NewGridWidth+x] = '5';
+	}else if(!topDot && !bottomDot && !leftDot && rightDot){
+	  grid[y*NewGridWidth+x] = '6';
+	}else if(topDot && !bottomDot && leftDot && !rightDot){
+	  grid[y*NewGridWidth+x] = '7';
+	}else if(topDot && !bottomDot && !leftDot && !rightDot){
+	  grid[y*NewGridWidth+x] = '8';
+	}else if(topDot && !bottomDot && leftDot && rightDot){
+	  grid[y*NewGridWidth+x] = '9';
+	}else if(topDot && bottomDot && !leftDot && !rightDot){
+	  grid[y*NewGridWidth+x] = 'A';
+	}else if(!topDot && !bottomDot && leftDot && rightDot){
+	  grid[y*NewGridWidth+x] = 'B';
+	}else if(!topDot && !bottomDot && leftDot && !rightDot){
+	  grid[y*NewGridWidth+x] = 'C';
+	}else if(!topDot && bottomDot && !leftDot && !rightDot){
+	  grid[y*NewGridWidth+x] = 'D';
+	}else if(!topDot && bottomDot && leftDot && !rightDot){
+	  grid[y*NewGridWidth+x] = 'E';
+	}else{
+	  //set it to 1
+	  grid[y*NewGridWidth+x] = '1';
+ 	}
+	
+      }
     }
-  }
+  } 
 
   //print grids
   for(int y=0;y<20;y++){
@@ -127,14 +151,18 @@ void Core::HandleInput(float dt){
     //printf("not on ground\n");
   }
   if(IsKeyDown(KEY_D) && IsKeyDown(KEY_LEFT_SHIFT)){
+    h_direction = east;
     fPlayerVelX += (bPlayerOnGround ? 100.0f: 40.0f)*dt*20;
   }else if(IsKeyDown(KEY_D)){
+    h_direction = east;
     fPlayerVelX += (bPlayerOnGround ? 50.0f: 40.0f)*dt*20;
   }
   
   if(IsKeyDown(KEY_A) && IsKeyDown(KEY_LEFT_SHIFT)){
+    h_direction = west;
     fPlayerVelX += (bPlayerOnGround?-100.0f:-40.0f)*dt*20;
   }else if(IsKeyDown(KEY_A)){
+    h_direction = west;
     fPlayerVelX += (bPlayerOnGround?-50.0f:-40.0f)*dt*20;
   }
   /*
@@ -412,6 +440,24 @@ void Core::Update(float dt,Camera2D& camera){
 
   //UpdateHealth();
   UpdateEnemy();
+  //update hero frame counter
+  heroFrameCounter++;
+  if(heroFrameCounter>=(60/heroFrameSpeed)){
+    heroFrameCounter = 0;
+    heroCurrentFrame++;
+    if(heroCurrentFrame>5){
+      heroCurrentFrame = 0;
+    }
+    heroFrameRec.x = (float)heroCurrentFrame*(float)hero_texture.width/5;
+    if(h_direction == west){
+      heroFrameRec.y = 0.0f *(float)hero_texture.height/2;
+    }else if(h_direction == east){
+      heroFrameRec.y =  1.0f*(float)hero_texture.height/2;
+    }
+  }
+  printf("Direction\n");
+  if(h_direction == east) printf("east");
+  if(h_direction == west) printf("west");
   
    	
 }
@@ -446,26 +492,56 @@ char Core::GetTile(int x,int y){
 void Core::Draw(Camera2D& camera){
   //draw background
   DrawTexture(Tbackground,0,0,WHITE);
-  //print grids
-  for(int y=0;y<=NewGridHeight;y++){
-    //printf("%d val: %c \n",y,grid[y*20+0]);
-    for(int x=0;x<=NewGridWidth;x++){
-      if(grid[y*NewGridWidth+x]=='.'){
-	//DrawRectangle(x*NewBoxDim,y*NewBoxDim,
-	//      NewBoxDim,NewBoxDim,BLUE);
-      }else if(grid[y*NewGridWidth+x]=='#'){
-	bool rightDot= (x+1<NewGridWidth) && (grid[y*NewGridWidth+x+1] == '.');
-	bool topDot = (y-1 >= 0) && (grid[(y-1)*NewGridWidth+x]=='.');
 
-	if(rightDot && topDot){
-	  tileFrameRec.x = 1.0f *(float)tile_texture.width / 11;
-	}else{
-	  tileFrameRec.x = 0.0f *(float)tile_texture.width / 11;
-	}
+  //print grids
+  for(int y=0;y<NewGridHeight;y++){
+    //printf("%d val: %c \n",y,grid[y*20+0]);
+    for(int x=0;x<NewGridWidth;x++){
+      if(grid[y*NewGridWidth+x]=='1'){
+	tileFrameRec.x = 0.0f *(float)tile_texture.width / 14;
 	DrawTextureRec(tile_texture,tileFrameRec,{(float)x*NewBoxDim,(float)y*NewBoxDim},WHITE);
-      }
+      }else if(grid[y*NewGridWidth+x] =='2'){
+	tileFrameRec.x = 1.0f *(float)tile_texture.width / 14;
+	DrawTextureRec(tile_texture,tileFrameRec,{(float)x*NewBoxDim,(float)y*NewBoxDim},WHITE);
+      }else if(grid[y*NewGridWidth+x] =='3'){
+	tileFrameRec.x = 2.0f *(float)tile_texture.width / 14;
+	DrawTextureRec(tile_texture,tileFrameRec,{(float)x*NewBoxDim,(float)y*NewBoxDim},WHITE);
+      }else if(grid[y*NewGridWidth+x] =='4'){
+	tileFrameRec.x = 3.0f *(float)tile_texture.width / 14;
+	DrawTextureRec(tile_texture,tileFrameRec,{(float)x*NewBoxDim,(float)y*NewBoxDim},WHITE);
+      }else if(grid[y*NewGridWidth+x] =='5'){
+	tileFrameRec.x = 4.0f *(float)tile_texture.width / 14;
+	DrawTextureRec(tile_texture,tileFrameRec,{(float)x*NewBoxDim,(float)y*NewBoxDim},WHITE);
+      }else if(grid[y*NewGridWidth+x] =='6'){
+	tileFrameRec.x = 5.0f *(float)tile_texture.width / 14;
+	DrawTextureRec(tile_texture,tileFrameRec,{(float)x*NewBoxDim,(float)y*NewBoxDim},WHITE);
+      }else if(grid[y*NewGridWidth+x] =='7'){
+	tileFrameRec.x = 6.0f *(float)tile_texture.width / 14;
+	DrawTextureRec(tile_texture,tileFrameRec,{(float)x*NewBoxDim,(float)y*NewBoxDim},WHITE);
+      }else if(grid[y*NewGridWidth+x] =='8'){
+	tileFrameRec.x = 7.0f *(float)tile_texture.width / 14;
+	DrawTextureRec(tile_texture,tileFrameRec,{(float)x*NewBoxDim,(float)y*NewBoxDim},WHITE);
+      }else if(grid[y*NewGridWidth+x] =='9'){
+	tileFrameRec.x = 8.0f *(float)tile_texture.width / 14;
+	DrawTextureRec(tile_texture,tileFrameRec,{(float)x*NewBoxDim,(float)y*NewBoxDim},WHITE);
+      }else if(grid[y*NewGridWidth+x] =='A'){
+	tileFrameRec.x = 9.0f *(float)tile_texture.width / 14;
+	DrawTextureRec(tile_texture,tileFrameRec,{(float)x*NewBoxDim,(float)y*NewBoxDim},WHITE);
+      }else if(grid[y*NewGridWidth+x] =='B'){
+	tileFrameRec.x = 10.0f *(float)tile_texture.width / 14;
+	DrawTextureRec(tile_texture,tileFrameRec,{(float)x*NewBoxDim,(float)y*NewBoxDim},WHITE);
+      }else if(grid[y*NewGridWidth+x] =='C'){
+	tileFrameRec.x = 11.0f *(float)tile_texture.width / 14;
+	DrawTextureRec(tile_texture,tileFrameRec,{(float)x*NewBoxDim,(float)y*NewBoxDim},WHITE);
+      }else if(grid[y*NewGridWidth+x] =='D'){
+	tileFrameRec.x = 12.0f *(float)tile_texture.width / 14;
+	DrawTextureRec(tile_texture,tileFrameRec,{(float)x*NewBoxDim,(float)y*NewBoxDim},WHITE);
+      }else if(grid[y*NewGridWidth+x] =='E'){
+	tileFrameRec.x = 13.0f *(float)tile_texture.width / 14;
+	DrawTextureRec(tile_texture,tileFrameRec,{(float)x*NewBoxDim,(float)y*NewBoxDim},WHITE);
+      } 
     }
-  } 
+  }
 
 
   //draw enemies
@@ -476,7 +552,8 @@ void Core::Draw(Camera2D& camera){
     }
   }
   //draw player
-  DrawRectangle(fPlayerPos.x,fPlayerPos.y,NewBoxDim,NewBoxDim,GREEN);
+  //DrawRectangle(fPlayerPos.x,fPlayerPos.y,NewBoxDim,NewBoxDim,GREEN);
+  DrawTextureRec(hero_texture,heroFrameRec,fPlayerPos,WHITE);
   //draw lines
   
   for(int i=0;i<67;i++){
