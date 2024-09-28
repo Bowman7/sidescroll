@@ -35,8 +35,34 @@ public:
   void UpdateHealth();
   bool IsTimeElapsed(float);
   void UpdateEnemy();
+  void UpdateAnimations();
   void GameInit();
+  void DrawHealth();
+  bool IsGameWon(){
+    return gameWon;
+  }
+  bool IsGameOver(){
+    return gameOver;
+  }
 private:
+  Sound jump;
+  Sound death;
+  //gamewon
+  bool gameOver = false;
+  bool gameWon =false;
+  //heart
+  Image heart_image;
+  Texture2D heart_texture;
+  //for enemy
+  h_Direction e_dir;
+  Rectangle e_FrameRec;
+  int e_CurrentFrame;
+  int e_FrameCounter;
+  int e_FrameSpeed;
+  //for run animation
+  bool h_running;
+  //for jump animation
+  bool h_jump;
   //direction
   h_Direction h_direction;
   //hero tile

@@ -36,11 +36,29 @@ Core::Core(Camera2D &camera){
   hero_image = LoadImage("assets/hero.png");
   hero_texture = LoadTextureFromImage(hero_image);
   UnloadImage(hero_image);
-  heroFrameRec = {0.0f,0.0f,(float)hero_texture.width/5,(float)hero_texture.height/2};
+  heroFrameRec = {0.0f,0.0f,(float)hero_texture.width/5,(float)hero_texture.height/8};
   heroCurrentFrame = 0;
   heroFrameCounter = 0;
   heroFrameSpeed = 5;
-  
+  //for hero jumping
+  h_jump = false;
+  //for run animation
+  h_running = false;
+
+  //for enemy
+  e_FrameRec ={0.0f,96.0f,(float)hero_texture.width/5,
+    (float)hero_texture.height/8};
+  e_CurrentFrame = 0;
+  e_FrameCounter = 0;
+  e_FrameSpeed = 5;
+  //for heart
+  heart_image = LoadImage("assets/heart.png");
+  heart_texture = LoadTextureFromImage(heart_image);
+  UnloadImage(heart_image);
+  //load sound
+  //InitAudioDevice();
+  jump = LoadSound("music/jump.mp3");
+  death = LoadSound("music/death.mp3");
   
 }
 
@@ -138,31 +156,28 @@ void Core::InitGrid(){
 
   //print grids
   for(int y=0;y<20;y++){
-    printf("%d val: %c \n",y,grid[y*20+0]);
+    //printf("%d val: %c \n",y,grid[y*20+0]);
   }
 }
 void Core::HandleInput(float dt){
-  //set velocity to 0 if not pressed
-  //fPlayerVelX = 0.0f;
-  //fPlayerVelY = 0.0f;
-  if(bPlayerOnGround){
-    //printf("on ground\n");
-  }else{
-    //printf("not on ground\n");
-  }
+  
   if(IsKeyDown(KEY_D) && IsKeyDown(KEY_LEFT_SHIFT)){
     h_direction = east;
+    h_running = true;
     fPlayerVelX += (bPlayerOnGround ? 100.0f: 40.0f)*dt*20;
   }else if(IsKeyDown(KEY_D)){
     h_direction = east;
+    h_running = true;
     fPlayerVelX += (bPlayerOnGround ? 50.0f: 40.0f)*dt*20;
   }
   
   if(IsKeyDown(KEY_A) && IsKeyDown(KEY_LEFT_SHIFT)){
     h_direction = west;
+    h_running = true;
     fPlayerVelX += (bPlayerOnGround?-100.0f:-40.0f)*dt*20;
   }else if(IsKeyDown(KEY_A)){
     h_direction = west;
+    h_running = true;
     fPlayerVelX += (bPlayerOnGround?-50.0f:-40.0f)*dt*20;
   }
   /*
@@ -175,10 +190,19 @@ void Core::HandleInput(float dt){
   */
 
   if(IsKeyPressed(KEY_SPACE)){
+    PlaySound(jump);
+    h_jump= true;
+    h_running = false;
     if(fPlayerVelY == 0){
       fPlayerVelY = -84.0f;
     }
   }
+  //check if left or right is not being pressed
+  if(IsKeyUp(KEY_D) && IsKeyUp(KEY_A)){
+    h_running = false;
+  }
+  
+  //h_running = false;
 }  
 
 void Core::UpdatePlayerPos(float dt){
@@ -355,14 +379,15 @@ void Core::UpdateEnemy(){
 	 ){
 	//check for top damage
 	if(fPlayerPos.y+NewBoxDim <= e_y+NewBoxDim/2){
-	  printf("enemy dead\n");
+	  // printf("enemy dead\n");
+	  PlaySound(death);
 	  enemy[i].alive = false;
 	  fPlayerVelY *= -2;
 	}else{
 	  fPlayerVelX *= -30;
 	  health--;
-	  printf("collision\n");
-	  printf("Current health: %d\n",health);
+	  //printf("collision\n");
+	  //printf("Current health: %d\n",health);
 	}
       }
     }
@@ -372,12 +397,14 @@ void Core::UpdateEnemy(){
   //1
   if(IsTimeElapsed(0.1f)){
     if(!setDir){
+      e_dir = west;
       for(int i=0;i<8;i++){
 	enemy[i].posX -=0.25;
       }
       count++;
     }
     else if(setDir){
+      e_dir = east;
       for(int i=0;i<8;i++){
 	enemy[i].posX +=0.25;
       }
@@ -424,13 +451,80 @@ void Core::GameInit(){
 
   fPlayerVelX=0.0f;
   fPlayerVelY=0.0f;
+
+  gameWon = false;
+  gameOver = false;
   
+}
+//update all niamtions
+void Core::UpdateAnimations(){
+  //update hero frame counter
+  heroFrameCounter++;
+  if(heroFrameCounter>=(30/heroFrameSpeed)){
+    heroFrameCounter = 0;
+    heroCurrentFrame++;
+    if(heroCurrentFrame>5){
+      heroCurrentFrame = 0;
+    }
+    heroFrameRec.x = (float)heroCurrentFrame*(float)hero_texture.width/5;
+    //for jumping
+    if(h_jump && h_direction == east){
+      heroFrameRec.y = 2.0f*(float)hero_texture.height/8;
+    }else if(h_jump && h_direction == west){
+      heroFrameRec.y =  3.0f*(float)hero_texture.height/8; 
+    }else{
+      if(h_running){
+	if(h_direction == west){
+	  heroFrameRec.y = 4.0f*(float)hero_texture.height/8;
+	}else if(h_direction == east){
+	  heroFrameRec.y = 5.0f*(float)hero_texture.height/8;
+	}
+      }else{
+	if(h_direction == east){
+	  heroFrameRec.y =  1.0f*(float)hero_texture.height/8; 
+	}else if(h_direction == west){
+	  heroFrameRec.y =  0.0f*(float)hero_texture.height/8; 
+	}
+      }
+    }
+    //for enemy animation
+    e_FrameCounter++;
+    if(e_FrameCounter >=(0.5/e_FrameSpeed)){
+      e_FrameCounter = 0;
+      e_CurrentFrame++;
+      if(e_CurrentFrame>5){
+	e_CurrentFrame = 0;
+      }
+      e_FrameRec.x = (float)e_CurrentFrame*(float)hero_texture.width/5;
+      if(e_dir == east){
+	e_FrameRec.y = 7.0f*(float)hero_texture.height/8;
+      }else if(e_dir == west){
+	e_FrameRec.y = 6.0f*(float)hero_texture.height/8;
+      }
+    }
+  }
+  
+  //update if jumping or not
+  float x = fPlayerPos.x/NewBoxDim;
+  float y = fPlayerPos.y/NewBoxDim;
+  int x_grid = (int)x;
+  int y_grid = (int)y;
+  char down = GetTile(x_grid,y_grid+1);
+  //printf("down is: %c\n",down);
+  if(down != '.'){
+    h_jump = false;
+    //printf("Not jumping\n");
+  }else{
+    h_jump = true;
+    //printf("Jumping\n");
+  }
 }
 void Core::Update(float dt,Camera2D& camera){
 
   //check if helath 0
-  if(health < 0){
-    GameInit();
+  if(health <= 0){
+    gameOver = true;
+    //GameInit();
   }
   UpdatePlayerPos(dt);
 
@@ -440,26 +534,21 @@ void Core::Update(float dt,Camera2D& camera){
 
   //UpdateHealth();
   UpdateEnemy();
-  //update hero frame counter
-  heroFrameCounter++;
-  if(heroFrameCounter>=(60/heroFrameSpeed)){
-    heroFrameCounter = 0;
-    heroCurrentFrame++;
-    if(heroCurrentFrame>5){
-      heroCurrentFrame = 0;
-    }
-    heroFrameRec.x = (float)heroCurrentFrame*(float)hero_texture.width/5;
-    if(h_direction == west){
-      heroFrameRec.y = 0.0f *(float)hero_texture.height/2;
-    }else if(h_direction == east){
-      heroFrameRec.y =  1.0f*(float)hero_texture.height/2;
-    }
+
+  UpdateAnimations();
+
+  //check for game won
+  float x = fPlayerPos.x/NewBoxDim;
+  float y = fPlayerPos.y/NewBoxDim;
+  int x_g = (int)x;
+  int y_g = (int)y;
+  //printf("x: %d y: %d\n",x_g,y_g);
+  if(x_g == 62 && y_g == 2){
+    //printf("GAME WONNN!\n");
+    gameWon = true;
+    
   }
-  printf("Direction\n");
-  if(h_direction == east) printf("east");
-  if(h_direction == west) printf("west");
   
-   	
 }
 //check if time elapsed
 bool Core::IsTimeElapsed(float time){
@@ -547,15 +636,19 @@ void Core::Draw(Camera2D& camera){
   //draw enemies
   for(int i=0;i<8;i++){
     if(enemy[i].alive){
-      DrawRectangle(enemy[i].posX*enemy[i].nDim,enemy[i].posY*enemy[i].nDim,
-		    enemy[i].nDim,enemy[i].nDim,enemy[i].color);
+      //DrawRectangle(enemy[i].posX*enemy[i].nDim,enemy[i].posY*enemy[i].nDim,
+      //enemy[i].nDim,enemy[i].nDim,enemy[i].color);
+      DrawTextureRec(hero_texture,e_FrameRec,{
+	  (float)enemy[i].posX*enemy[i].nDim,
+	  (float)enemy[i].posY*enemy[i].nDim},WHITE);
     }
   }
   //draw player
   //DrawRectangle(fPlayerPos.x,fPlayerPos.y,NewBoxDim,NewBoxDim,GREEN);
   DrawTextureRec(hero_texture,heroFrameRec,fPlayerPos,WHITE);
+
+ 
   //draw lines
-  
   for(int i=0;i<67;i++){
     //vert line
     //DrawLine(i*16,0,i*16,720,BLACK);
@@ -563,7 +656,14 @@ void Core::Draw(Camera2D& camera){
   for(int j=0;j<45;j++){
      //horz lines
     //DrawLine(0,j*16,1080,j*16,BLACK);
-  }
+  }  
+}
 
+void Core::DrawHealth(){
+   //draw heart
+  for(int i=0;i<health;i++){
+    int x = i*10;
+    DrawTexture(heart_texture,i*16+x+16,688,WHITE);
+  }
   
 }
